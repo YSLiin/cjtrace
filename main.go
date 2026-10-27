@@ -42,7 +42,8 @@ func (m Model) View() tea.View {
 }
 
 func main() {
-	if _, err := tea.NewProgram(Model{typer: cjtrace.New()}).Run(); err != nil {
+	cjtyper := cjtrace.New()
+	if _, err := tea.NewProgram(Model{typer: cjtyper}).Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
