@@ -307,14 +307,16 @@ asserting on the messages and view that come out — and never reaches for inter
 emitted messages *are* the contract a game depends on, so asserting on them is asserting on
 external behaviour. There is no prior art: the repo has no tests, so these become it.
 
-**Two seams**, both new, pitched as high as they go:
+**Three seams**, all new, pitched as high as they go:
 
 1. **cjtrace** — the behavioural seam. Driven by real key-press messages with a fake
    dictionary, a fixed Picker and a fixed clock. Covers the Round lifecycle, retry-until-
-   correct, the Char-to-Codes handoff, and — because cjtrace embeds cjtyper and real
-   keystrokes pass through it — the five-Letter cap, viability tracking and wrong-Letter
-   marking, without needing a second seam for the typer.
-2. **cjdict** — the data seam, and unavoidable: its correctness is data-dependent, and a fake
+   correct, the Char-to-Codes handoff, and the four emitted messages.
+2. **cjtyper** — the component seam. It is a published API that third parties import
+   *without* cjtrace, so its contract is tested directly: keystroke translation, the
+   five-Letter cap, viability tracking, the verdict, and idle-timeout hints against a fake
+   clock at the layer where the clock actually lives.
+3. **cjdict** — the data seam, and unavoidable: its correctness is data-dependent, and a fake
    dictionary at the cjtrace seam cannot prove any of it. Golden tests against the real
    embedded data assert the counts measured during design: 92,865 Chars, 2,912 with frequency
    entries, 7,883 with more than one Code, and the per-category pool sizes (42, 73, 15, 26,
@@ -325,10 +327,11 @@ No seam for the menu: it is UI over KeySet union arithmetic that cjdict's tests 
 Determinism comes from the injected Picker and clock, which is the reason those two are
 options rather than fields.
 
-**The open question**: whether cjtyper earns a third seam. Against: it is exercised through
-cjtrace already, and fewer seams is better. For: it is a published API that third parties
-import *without* cjtrace, and its idle-timeout hint is tested at the layer where the clock
-lives rather than two layers up. This spec assumes two seams.
+The cjtyper seam was initially left as an open question, on the grounds that cjtrace exercises
+the typer anyway and fewer seams is better. Breaking the work into tickets settled it: the
+typer lands two tickets before the drill exists, so without its own seam those tickets would
+ship with no automated proof at all, and hint timing would be tested two layers from its
+clock. The delivery argument decided what the API argument had left balanced.
 
 ## Out of Scope
 
