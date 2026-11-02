@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
-	"github.com/ysliin/cjtrace/cjtrace"
+	"github.com/ysliin/cjtrace/cjtyper"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
 
 type Model struct {
-	typer cjtrace.Model
+	typer cjtyper.Model
 }
 
 func (m Model) Init() tea.Cmd {
@@ -42,8 +42,8 @@ func (m Model) View() tea.View {
 }
 
 func main() {
-	cjtyper := cjtrace.New()
-	if _, err := tea.NewProgram(Model{typer: cjtyper}).Run(); err != nil {
+	typer := cjtyper.New()
+	if _, err := tea.NewProgram(Model{typer: typer}).Run(); err != nil {
 		log.Fatalln(err)
 	}
 }

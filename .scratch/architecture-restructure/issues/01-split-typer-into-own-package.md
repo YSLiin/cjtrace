@@ -13,10 +13,10 @@ Review this one as a no-op: if behaviour changed, something went wrong.
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] Everything builds, and running the binary types Letters exactly as before the move
-- [ ] The Cangjie Letter table is exported from `cjtyper`
-- [ ] Installing every command in the module puts only the practice binary on `$PATH` — not the generators
-- [ ] The README's generator commands point at their new location
-- [ ] No behaviour change anywhere
+- [x] Everything builds, and running the binary types Letters exactly as before the move
+- [x] The Cangjie Letter table is exported from `cjtyper`
+- [x] Installing every command in the module puts only the practice binary on `$PATH` — not the generators
+- [x] The README's generator commands point at their new location
+- [x] No behaviour change anywhere

@@ -1,4 +1,4 @@
-package cjtrace
+package cjtyper
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		n := len([]rune(m.TextInput.Value()))
 		if len(msg.Text) == 0 {
 			m.TextInput, cmd = m.TextInput.Update(msg)
-		} else if c, ok := cjmap[strings.ToLower(msg.Text)]; ok && n < 5 {
+		} else if c, ok := Letters[strings.ToLower(msg.Text)]; ok && n < 5 {
 			msg.Text = c
 			m.TextInput, cmd = m.TextInput.Update(msg)
 		}
