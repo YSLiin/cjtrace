@@ -66,7 +66,7 @@ binary.
 1. As a learner, I want to practise only 哲理類 (日月金木水火土), so that I can build muscle
    memory for one coherent group of Letters before adding more.
 2. As a learner, I want to select several categories at once, so that I can widen my
-   practice gradually from 15 characters up to 2,872 without needing a separate preset for
+   practice gradually from 19 characters up to 5,611 without needing a separate preset for
    every rung.
 3. As a learner, I want to see how many characters a scope contains before I start, so that
    I know whether I'm about to drill a pool of 15 or a pool of 500.
@@ -180,7 +180,7 @@ for KeySet — it receives Codes, never scopes.
 | **Char** (字) | one character — the unit of practice |
 | **Code** (倉頡碼) | the full Letter sequence for a Char |
 | **Letter** (倉頡字母) | one of the 25, paired 1:1 with a **Key** |
-| **KeySet** | a scope of Letters, as a bitmask |
+| **KeySet** | a set of Letters, passed as Keys and evaluated as a bitmask |
 | **Group** | a named preset KeySet |
 | **Round** | an ordered sample of Chars drawn from a scope |
 | **Picker** | how a Round's Chars are sampled |
@@ -198,16 +198,15 @@ Char. Its Char type carries the rune, all its Codes, and its frequency count; bi
 private to the query and the frequency rank is dropped as derivable.
 
 - **All Codes per Char must be preserved.** The obvious shape — a map keyed by Char holding
-  one Code — would mark a correct answer wrong for the 7,883 Chars that accept more than one.
-- Malformed rows are **skipped silently**; validation belongs to the generator's sanity
-  check, not to library load. With parse errors skipped there is no failure mode left, so
-  the constructor returns no error.
-- The default candidate pool is Chars with a frequency entry (2,912 of 92,865). The full
+  one Code — would mark a correct answer wrong for the 2,288 Chars (of 20,902) that accept more than one.
+- The data is generated and **trusted**: `go generate` fails on bad input, so library load
+  does no row validation and skips nothing.
+- The default candidate pool is Chars with a frequency entry (5,701 of 20,902). The full
   dictionary stays available for custom scopes.
 - Containment is tested as "the Char's Code uses no Letter outside the KeySet". **No index**:
-  a 2,912-row scan is microseconds, and bitmask dedup is useless at this size (2,632 distinct
-  masks for 2,913 Chars). Results are **memoised per KeySet**. If the full 92,865-Char
-  dictionary ever needs interactive queries, the upgrade is complement-plus-inverted-bitmap
+  a scan of the default pool is fast enough to run on every tick of a menu box (see README
+  Benchmarks), so queries are **not memoised**; the parsed tables are built once on first use.
+  If the full dictionary ever needs interactive queries, the upgrade is complement-plus-inverted-bitmap
   behind this same interface.
 
 ### cjtyper
@@ -233,7 +232,7 @@ whether the buffer is still a prefix of *some* acceptable Code, and commit on th
 ### cjtrace
 
 Owns the drill. Ships the four traditional categories as presets, **multi-selectable** — their
-15 unions form the whole progression from 15 to 2,872 Chars, so there are no cumulative
+15 unions form the whole progression from 19 to 5,611 Chars, so there are no cumulative
 presets and no frequency-sharded ones. 難 is in no category, so Chars needing it are reachable
 only through a custom scope.
 
@@ -318,9 +317,9 @@ external behaviour. There is no prior art: the repo has no tests, so these becom
    clock at the layer where the clock actually lives.
 3. **cjdict** — the data seam, and unavoidable: its correctness is data-dependent, and a fake
    dictionary at the cjtrace seam cannot prove any of it. Golden tests against the real
-   embedded data assert the counts measured during design: 92,865 Chars, 2,912 with frequency
-   entries, 7,883 with more than one Code, and the per-category pool sizes (42, 73, 15, 26,
-   and 514 for the two-category union).
+   embedded data assert the counts measured during design: 20,902 Chars, 5,705 with frequency
+   entries, 2,288 with more than one Code, and the per-Group pool sizes (66, 108, 19, 24,
+   and 877 for the 哲理類+筆劃類 union; 243, 360, 58, 65 and 3,206 over the full dictionary).
 
 No seam for the menu: it is UI over KeySet union arithmetic that cjdict's tests already cover.
 
@@ -345,7 +344,7 @@ clock. The delivery argument decided what the API argument had left balanced.
   mastery, or resample, favouring variety?
 - **The dataset rework**: collapsing the two generators into one tool producing a single
   artifact, keyed per Char with space-separated Codes and a frequency count where zero means
-  "no frequency entry" — one file holding all 92,865 Chars at less than today's two files,
+  "no frequency entry" — one file holding all 20,902 Chars at less than today's two files,
   with codepoint, bitmask and frequency-percentage columns dropped as derivable. (The bitmask
   column makes the file both larger *and* slower to load, since computing the mask is a few
   shift-ORs against an integer parse.) Source URLs, retrieval date and corpus total go in
@@ -366,54 +365,70 @@ clock. The delivery argument decided what the API argument had left balanced.
 ### Why the four traditional categories, not frequency-sharded presets
 
 The bitmask was built to make frequency-sharded presets possible, so dropping them deserves
-the measurement. Weighted Letter usage across running text is flat — 27% for the heaviest down
-to 8%, with 難 at 1% — so there is no head to shard on. More decisively, Letter usage does not
-predict *typeable* Chars, because a Char needs all its Letters in scope: the top 6 Letters by
-usage yield 53 Chars, the coverage-optimal 6 yield 70, and the traditional 筆劃類 — 7 Letters —
-yields 73. At 12 Letters, the top 12 by usage yield 517 against 514 for the two traditional
-categories. The traditional grouping is as good by the numbers and better pedagogically: the
-glyphs in each category share visual logic and the categories have canonical names.
+the measurement (default pool of 5,701 Chars; Letter *usage* is the share of running-text
+weight carried by Chars whose first Code contains the Letter). Usage is flat — 27% for the
+heaviest Letter down to 8% for the lightest, with 難 at 1% — so there is no head to shard on.
+More decisively, Letter usage does not predict *typeable* Chars, because a Char needs all its
+Letters in scope: the top 6 Letters by usage yield 105 Chars, the coverage-optimal 6 yield 141,
+and the traditional 筆劃類 — 7 Letters — yields 108. At 12 Letters, the top 12 by usage yield
+883 against 877 for the 14 Letters of 哲理類+筆劃類. The traditional grouping is about as good
+as usage ranking by the numbers (a coverage-optimised small set does win, but is an arbitrary
+bag of Letters) and better pedagogically: the glyphs in each category share visual logic and
+the categories have canonical names.
 
 ### The 15 unions
 
+Default pool (Chars with a frequency entry). The Groups' Letters are
+
+- 哲理類: `a`–`g`,
+- 筆劃類: `h`–`n`,
+- 人體類: `o`–`r`,
+- 字形類: `s`–`w` and `y` (卜);
+
+難 (`x`) belongs to no Group. `% running text` is the summed frequency of the pool Chars in scope
+over the summed frequency of the whole table.
+
 | scope | Letters | Chars | % running text |
 |---|---|---|---|
-| 人體類 | 4 | 15 | 2.4 |
-| 字形類 | 6 | 26 | 1.4 |
-| 哲理類 | 7 | 42 | 1.6 |
-| 筆劃類 | 7 | 73 | 5.8 |
-| 人體類+字形類 | 10 | 116 | 6.6 |
-| 哲理類+人體類 | 11 | 162 | 7.9 |
-| 筆劃類+人體類 | 11 | 327 | 16.9 |
-| 哲理類+字形類 | 13 | 239 | 7.3 |
-| 筆劃類+字形類 | 13 | 319 | 15.3 |
-| 哲理類+筆劃類 | 14 | 514 | 22.8 |
-| 哲理類+人體類+字形類 | 17 | 625 | 22.2 |
-| 筆劃類+人體類+字形類 | 17 | 918 | 37.2 |
-| 哲理類+筆劃類+人體類 | 18 | 1210 | 48.8 |
-| 哲理類+筆劃類+字形類 | 20 | 1427 | 51.3 |
-| all four | 24 | 2872 | 99.2 |
+| 人體類 | 4 | 19 | 2.3 |
+| 字形類 | 6 | 39 | 1.4 |
+| 哲理類 | 7 | 66 | 1.6 |
+| 筆劃類 | 7 | 108 | 5.6 |
+| 人體類+字形類 | 10 | 211 | 6.5 |
+| 哲理類+人體類 | 11 | 245 | 7.8 |
+| 筆劃類+人體類 | 11 | 556 | 16.6 |
+| 哲理類+字形類 | 13 | 418 | 7.2 |
+| 筆劃類+字形類 | 13 | 561 | 15.0 |
+| 哲理類+筆劃類 | 14 | 877 | 22.2 |
+| 哲理類+人體類+字形類 | 17 | 1131 | 22.1 |
+| 筆劃類+人體類+字形類 | 17 | 1754 | 36.8 |
+| 哲理類+筆劃類+人體類 | 18 | 2175 | 48.1 |
+| 哲理類+筆劃類+字形類 | 20 | 2703 | 50.9 |
+| all four | 24 | 5611 | 99.2 |
 
 ### Why uniform sampling is the default
 
 | scope | pool | top 10 Chars' share of weight | heaviest ÷ lightest | distinct Chars over 10 Rounds of 10 |
 |---|---|---|---|---|
-| 哲理類 | 42 | 73% | 117× | weighted 31/42 · uniform 40/42 |
-| 筆劃類 | 73 | 72% | 704× | weighted 35/73 · uniform 55/73 |
-| 哲理類+筆劃類 | 514 | 29% | 761× | weighted 76/514 · uniform 95/514 |
+| 哲理類 | 66 | 72% | 3,851× | weighted 28/66 · uniform 53/66 |
+| 筆劃類 | 108 | 73% | 22,524× | weighted 33/108 · uniform 67/108 |
+| 哲理類+筆劃類 | 877 | 30% | 24,362× | weighted 69/877 · uniform 95/877 |
+
+Distinct Chars are the mean over 300 simulated sessions (seed 42), each of 10 Rounds drawing
+10 distinct Chars.
 
 ### Data hygiene
 
-`○` is the only non-character in the frequency table (Unicode category `So`) and the only
-entry without a Code; nothing is outside the BMP; the intersection is 2,912 Chars; 89,953
-Chars have Codes but no frequency entry; `z` appears in 22 Codes, all exotic CJK extensions.
+Four frequency entries have no Code — `○`, `Y`, `S` and `~` — so the pool is 5,701 of the
+5,705 frequency entries; 15,201 Chars have Codes but no frequency entry. The Code generator
+keeps only U+4E00–U+9FFF, so nothing is outside the BMP and no Code contains `z`.
 
 ### Verification
 
 Build, then the tests. Then by hand: select 哲理類 alone and
-confirm the menu reports 42 Chars; run a Round and confirm a wrong Letter marks immediately,
+confirm the menu reports 66 Chars; run a Round and confirm a wrong Letter marks immediately,
 an idle pause reveals the next Letter, a wrong submission re-serves the same Char, and the
-menu returns at the end. Multi-select 哲理類+筆劃類 and confirm 514. Run once in a light
+menu returns at the end. Multi-select 哲理類+筆劃類 and confirm 877. Run once in a light
 terminal and once in a dark one. Install and confirm only the two intended binaries land on
 `$PATH`.
 

@@ -27,9 +27,9 @@ one to one.
 ### Scoping a drill
 
 **KeySet**:
-A set of Letters, held as a bitmask. A Char is typeable within a KeySet when one of its
-Codes uses no Letter outside it.
-_Avoid_: Bitmask (that is how a KeySet is stored, not what it is), Keymap
+A set of Letters, passed in as a string of their Keys and evaluated as a bitmask. A Char is
+typeable within a KeySet when one of its Codes uses no Letter outside it.
+_Avoid_: Bitmask (that is how a KeySet is evaluated, not what it is), Keymap
 
 **Group**:
 One of the four traditional named KeySets — 哲理類, 筆劃類, 人體類, 字形類. Groups are

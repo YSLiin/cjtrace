@@ -6,7 +6,7 @@ available, then practises exactly those. When the Round finishes the menu comes 
 learner can widen the scope or go again without restarting the program.
 
 Combinations matter more than the individual Groups: the 15 unions of four Groups form the
-entire difficulty ladder from 15 Chars up to 2,872, which is why there are no separate
+entire difficulty ladder from 19 Chars up to 5,611, which is why there are no separate
 cumulative presets. One total count is shown rather than a count per Group, since the Groups
 are additive.
 
@@ -19,7 +19,7 @@ the menu wholesale.
 **Status:** ready-for-agent
 
 - [ ] Any combination of the four Groups can be ticked
-- [ ] The total shown matches the measured unions — 42 for 哲理類, 514 for 哲理類+筆劃類, 2,872 for all four
+- [ ] The total shown matches the measured unions — 66 for 哲理類, 877 for 哲理類+筆劃類, 5,611 for all four (default pool)
 - [ ] Confirming a selection starts a Round over exactly that scope
 - [ ] The menu returns when the Round completes, and another Round can be run immediately
 - [ ] Selecting nothing cannot start an empty Round
