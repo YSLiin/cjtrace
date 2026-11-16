@@ -24,3 +24,20 @@ go generate ./cjdict/
 ```
 
 Update the golden counts in `cjdict/dict_test.go` if the output changes.
+
+## Benchmarks
+
+```bash
+go test -bench . -benchmem -run '^$' ./cjdict/
+```
+
+Measured on an Apple M1 (darwin/arm64, Go 1.27.2); indicative, single machine, median of 3 runs.
+The query benchmarks use 哲理類+筆劃類 (`a`–`n`).
+
+| benchmark | time | memory | allocs |
+|---|---|---|---|
+| `GetCandidates` (default pool, 5,701 Chars) | ~90µs | 12.9 KB | 8 |
+| `GetAllCandidates` (full dictionary, 20,902 Chars) | ~380µs | 49.7 KB | 11 |
+| `GetChars` including the one-off table parse | ~6.2ms | 9.4 MB | ~99.7k |
+
+Queries are not memoised; the parsed tables are built once on first use.

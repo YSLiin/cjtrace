@@ -3,6 +3,7 @@ package cjdict
 import (
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -178,4 +179,25 @@ func useFreqs(t *testing.T, csv string) {
 	})
 	RawFreqs = []byte(csv)
 	resetCaches()
+}
+
+func BenchmarkGetCandidates(b *testing.B) {
+	GetChars() // warm the tables in order to measure only the query
+	for b.Loop() {
+		GetCandidates(哲理類 + 筆劃類)
+	}
+}
+
+func BenchmarkGetAllCandidates(b *testing.B) {
+	GetAllChars()
+	for b.Loop() {
+		GetAllCandidates(哲理類 + 筆劃類)
+	}
+}
+
+func BenchmarkGetChars(b *testing.B) {
+	for b.Loop() {
+		resetCaches()
+		GetChars()
+	}
 }
