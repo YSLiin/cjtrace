@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"unicode/utf8"
 )
 
 func main() {
@@ -39,18 +40,30 @@ func main() {
 		cjwriter = csv.NewWriter(file)
 	}
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		matches := re.FindStringSubmatch(line)
-		if len(matches) == 3 {
-			char := matches[1]
-			freq, _ := strconv.Atoi(matches[2])
-
-			cjwriter.Write([]string{char, strconv.Itoa(freq)})
+	// NOTE: Lines that don't match are headers and borders; a matching row must parse cleanly.
+	rows := 0
+	for lineNo := 1; scanner.Scan(); lineNo++ {
+		matches := re.FindStringSubmatch(scanner.Text())
+		if len(matches) != 3 {
+			continue
 		}
+		char, freq := matches[1], matches[2]
+		if utf8.RuneCountInString(char) != 1 {
+			log.Fatalf("Line %d: want one char, got %q", lineNo, char)
+		}
+		if _, err := strconv.Atoi(freq); err != nil {
+			log.Fatalf("Line %d: invalid frequency %q: %v", lineNo, freq, err)
+		}
+		if err := cjwriter.Write([]string{char, freq}); err != nil {
+			log.Fatalf("Failed to write CSV: %v", err)
+		}
+		rows++
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("Failed to scan file: %v", err)
+	}
+	if rows == 0 {
+		log.Fatalf("No frequency rows found in %s", *inputPath)
 	}
 
 	cjwriter.Flush()

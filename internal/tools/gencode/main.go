@@ -37,19 +37,27 @@ func main() {
 	cjcodes := cj5.CharDefs
 	out := make([][]string, 0)
 	for code, chars := range cjcodes {
-		common_chars := make([]string, 0, 2)
+		commonChars := make([]string, 0, 2)
 		for _, c := range chars {
+			if !isValidCode(code) || c == "" {
+				log.Printf("Skipping due to invalid code %q or empty char under code %q.", code, code)
+				continue
+			}
+
+			// NOTE: Only CJK Unified Ideographs.
 			char := []rune(c)[0]
 			if char < 0x4E00 || char > 0x9FFF {
 				continue
 			}
-			common_chars = append(common_chars, string(char))
+			commonChars = append(commonChars, string(char))
 		}
-		if len(common_chars) == 0 {
-			continue
+		if len(commonChars) > 0 {
+			sort.Strings(commonChars)
+			out = append(out, append([]string{code}, commonChars...))
 		}
-		sort.Strings(common_chars)
-		out = append(out, append([]string{code}, common_chars...))
+	}
+	if len(out) == 0 {
+		log.Fatalf("No codes produced from %s", *inputPath)
 	}
 
 	sort.Slice(out, func(i, j int) bool {
@@ -67,9 +75,19 @@ func main() {
 		defer file.Close()
 		cjwriter = csv.NewWriter(file)
 	}
-	cjwriter.WriteAll(out)
-	cjwriter.Flush()
-	if err := cjwriter.Error(); err != nil {
-		log.Fatalf("Failed to flush CSV writer: %v", err)
+	if err := cjwriter.WriteAll(out); err != nil {
+		log.Fatalf("Failed to write CSV: %v", err)
 	}
+}
+
+func isValidCode(code string) bool {
+	if len(code) < 1 || len(code) > 5 {
+		return false
+	}
+	for _, c := range code {
+		if c < 'a' || c > 'y' {
+			return false
+		}
+	}
+	return true
 }

@@ -13,11 +13,11 @@ import (
 
 //go:generate go run ../internal/tools/gencode -in $CJ5_JSON -out cjcode.csv
 //go:embed cjcode.csv
-var RawCodes []byte
+var rawCodes []byte
 
 //go:generate go run ../internal/tools/genfreq -in $BIAU1_TXT -out freq.csv
 //go:embed freq.csv
-var RawFreqs []byte
+var rawFreqs []byte
 
 var (
 	freqsOnce sync.Once
@@ -37,7 +37,7 @@ type CjCode struct {
 
 func GetFreqs() map[rune]int {
 	freqsOnce.Do(func() {
-		cjreader := csv.NewReader(bytes.NewReader(RawFreqs))
+		cjreader := csv.NewReader(bytes.NewReader(rawFreqs))
 		records, err := cjreader.ReadAll()
 		if err != nil {
 			log.Fatalf("Failed to parse freq.csv: %v", err)
@@ -71,7 +71,7 @@ func GetChars() map[rune]CjCode {
 
 func GetAllChars() map[rune]CjCode {
 	fullOnce.Do(func() {
-		cjreader := csv.NewReader(bytes.NewReader(RawCodes))
+		cjreader := csv.NewReader(bytes.NewReader(rawCodes))
 		cjreader.FieldsPerRecord = -1
 		records, err := cjreader.ReadAll()
 		if err != nil {

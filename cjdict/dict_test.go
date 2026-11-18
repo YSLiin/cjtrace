@@ -159,25 +159,25 @@ func resetCaches() {
 
 func useCodes(t *testing.T, csv string) {
 	t.Helper()
-	origCodes := RawCodes
+	origCodes := rawCodes
 
 	t.Cleanup(func() {
-		RawCodes = origCodes
+		rawCodes = origCodes
 		resetCaches()
 	})
-	RawCodes = []byte(csv)
+	rawCodes = []byte(csv)
 	resetCaches()
 }
 
 func useFreqs(t *testing.T, csv string) {
 	t.Helper()
-	origFreqs := RawFreqs
+	origFreqs := rawFreqs
 
 	t.Cleanup(func() {
-		RawFreqs = origFreqs
+		rawFreqs = origFreqs
 		resetCaches()
 	})
-	RawFreqs = []byte(csv)
+	rawFreqs = []byte(csv)
 	resetCaches()
 }
 
