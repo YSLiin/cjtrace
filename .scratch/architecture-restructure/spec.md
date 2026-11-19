@@ -168,8 +168,8 @@ Dependencies point one way: cjtrace depends on cjdict and cjtyper; the menu depe
 cjtrace. **cjtyper imports neither cjdict nor cjtrace**, and **cjdict imports nothing of
 ours.**
 
-**KeySet is declared in cjdict, not beside cjtyper's Letter table.** This resolves a
-conflict: cjdict's scope query needs the type, and if it lived with the Letters then cjdict
+**KeySet belongs to cjdict, not beside cjtyper's Letter table.** It has no named Go type: cjdict's
+queries take it as a string of Keys. This resolves a conflict: cjdict's scope query needs it, and if it lived with the Letters then cjdict
 would import cjtyper and drag bubbletea and lipgloss into the data layer. cjtyper has no use
 for KeySet — it receives Codes, never scopes.
 
@@ -194,14 +194,16 @@ second name.
 ### cjdict
 
 Owns the embedded data and three operations: load, candidates-for-a-KeySet, and codes-for-a-
-Char. Its Char type carries the rune, all its Codes, and its frequency count; bitmasks stay
-private to the query and the frequency rank is dropped as derivable.
+Char. Chars are keyed by rune; each entry (`CjCode`) carries all the Char's Codes and their
+precomputed bitmasks. Frequency counts live in a separate table (`GetFreqs`), and the frequency
+rank is dropped as derivable. Codes-for-a-Char is a lookup in the full table. The returned
+tables are shared and read-only.
 
 - **All Codes per Char must be preserved.** The obvious shape — a map keyed by Char holding
   one Code — would mark a correct answer wrong for the 2,288 Chars (of 20,902) that accept more than one.
 - The data is generated and **trusted**: `go generate` fails on bad input, so library load
   does no row validation and skips nothing.
-- The default candidate pool is Chars with a frequency entry (5,701 of 20,902). The full
+- The default candidate pool is Chars with both a Code and a frequency entry (5,701 of 20,902). The full
   dictionary stays available for custom scopes.
 - Containment is tested as "the Char's Code uses no Letter outside the KeySet". **No index**:
   a scan of the default pool is fast enough to run on every tick of a menu box (see README
@@ -318,8 +320,8 @@ external behaviour. There is no prior art: the repo has no tests, so these becom
 3. **cjdict** — the data seam, and unavoidable: its correctness is data-dependent, and a fake
    dictionary at the cjtrace seam cannot prove any of it. Golden tests against the real
    embedded data assert the counts measured during design: 20,902 Chars, 5,705 with frequency
-   entries, 2,288 with more than one Code, and the per-Group pool sizes (66, 108, 19, 24,
-   and 877 for the 哲理類+筆劃類 union; 243, 360, 58, 65 and 3,206 over the full dictionary).
+   entries, 2,288 with more than one Code, and the per-Group pool sizes (66, 108, 19, 39,
+   and 877 for the 哲理類+筆劃類 union; 243, 360, 58, 99 and 3,206 over the full dictionary).
 
 No seam for the menu: it is UI over KeySet union arithmetic that cjdict's tests already cover.
 
@@ -444,14 +446,9 @@ without context, and the outcome of a real trade-off:
 3. **cjtrace has no lifecycle** — why there is no start message, no idle view and no restart
    binding, and why the host owns menu-to-Round composition.
 
-### Untracked files
+### Data files
 
-Nothing in the committed tree carries Cangjie data: the committed `cjmap` is the Letter
-table only. The code CSV, the frequency CSV and both generators exist in the working tree
-but are **not committed**, so cjdict's input arrives with them — this spec assumes those two
-CSVs land as they stand, and every count quoted here was measured against them.
-
-Separately, `cjcode.csv` and `cjcode.json` at the repo root are untracked experiments in a
-different format (30,072 rows; the `.json` holds CSV content and looks truncated). This spec
-treats the pair under the existing package directory as canonical and leaves the root two
-alone.
+`cjdict/cjcode.csv`, `cjdict/freq.csv` and both generators (`internal/tools/gencode`,
+`internal/tools/genfreq`) are committed; the CSVs are golden data and every count quoted here
+was measured against them. The upstream sources (`cj5.json`, `BIAU1.TXT`) are untracked; see
+README for regenerating.

@@ -3,16 +3,16 @@
 **What to build:** A package that owns the Cangjie code table and the character frequency
 table, and answers two questions: which Chars can be typed using only a given KeySet, and
 which Codes a given Char accepts. It must keep **every** Code a Char accepts — the obvious
-shape, a map holding one Code per Char, would mark a correct answer wrong for the 7,883 Chars
+shape, a map holding one Code per Char, would mark a correct answer wrong for the 2,288 Chars
 that accept more than one, which is the single most damaging bug available here. A malformed
 row is not handled: the data is generated and trusted, and `go generate` fails first on bad
 input, so construction does no validation. Scope queries are not memoised: a scan is fast enough for a
 menu that queries as the learner ticks boxes (see README Benchmarks). The parsed tables are
 built once on first use.
 
-The package must stay free of UI dependencies, which is why KeySet is declared here rather
-than beside the Letter table: declaring it next to the Letters would drag the terminal UI
-framework into the data layer.
+The package must stay free of UI dependencies, which is why KeySet belongs to this package's
+API (passed as a string of Keys, per GLOSSARY) rather than beside the Letter table: owning it
+next to the Letters would drag the terminal UI framework into the data layer.
 
 The data files `cjdict/cjcode.csv` and `cjdict/freq.csv` are committed golden data and every
 count below was measured against them; the upstream source files are not tracked (see README).
